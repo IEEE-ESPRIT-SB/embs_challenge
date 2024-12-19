@@ -312,7 +312,7 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
   }
 
   void _submitForm() async {
-    final url = Uri.parse('http://localhost:3000/api/form/submit-form');
+    final url = Uri.parse('http://10.0.2.2:3000/api/form/submit-form');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
