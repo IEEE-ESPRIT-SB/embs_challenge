@@ -3,6 +3,7 @@ import 'package:embs_challenge/screens/auth/sign_up/step1/sign_up_screen.dart';
 import 'package:embs_challenge/screens/auth/sign_up/step2/sign_up_rules_screen.dart';
 import 'package:embs_challenge/screens/auth/sign_up/step3/sign_up_age_screen.dart';
 import 'package:embs_challenge/screens/auth/sign_up/step4/sign_up_profile_screen.dart';
+import 'package:embs_challenge/screens/auth/sign_up/step5/questions_screen.dart';
 import 'package:embs_challenge/screens/dashboard/dashboard_screen.dart';
 import 'package:embs_challenge/screens/get_started/get_started_screen.dart';
 import 'package:embs_challenge/screens/home/home_screen.dart';
@@ -40,8 +41,9 @@ class MyApp extends StatelessWidget {
         Routes.dashboard: (context) => DashboardScreen(),
         Routes.meet: (context) => MeetScreen(),
         Routes.tasks: (context) => TaskScreen(),
+        Routes.questions: (context) => QuestionsScreen(),
       },
-      initialRoute: Routes.tasks,
+      initialRoute: Routes.questions,
     );
   }
 }
