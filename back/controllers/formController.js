@@ -2,7 +2,9 @@ const axios = require('axios');
 const Response = require('../models/responseModel');
 const fs = require('fs');
 const path = require('path');
-// Static questions
+const Report = require('../models/reportModel');
+
+// Static questions for the form
 const questions = [
     { id: 1, question: "What is your age?", type: "number" },
     { id: 2, question: "What is your gender?", type: "string" },
@@ -38,14 +40,11 @@ const questions = [
     { id: 32, question: "Do you often skip meals or eat unhealthy food due to lack of time or motivation?", type: "string" }
 ];
 
-
-// Get static questions
+// Get the static questions
 exports.getQuestions = (req, res) => {
     res.status(200).json({ questions });
 };
 
-
-// Handle form submission
 exports.submitForm = async (req, res) => {
     try {
         const formData = req.body;
@@ -54,38 +53,67 @@ exports.submitForm = async (req, res) => {
             return res.status(400).json({ error: 'Form data is required' });
         }
 
-
-        // Save response to database
-        const response = new Response({  responses: formData });
+        // Save form data in the Response model
+        const response = new Response({
+            responses: formData,
+        });
         await response.save();
 
-        // External API 1: Send form data to external API
+        // External API call 1: Send form data to external API for report generation
         const api1Url = process.env.API1_URL || 'http://127.0.0.1:8000/generate-mental-health-report';
         const api1Response = await axios.post(api1Url, formData);
 
+        // External API call 2: Generate weekly tasks based on the user ID from API 1
         const api2Response = await axios.post("http://localhost:8000/generate-weekly-tasks", {
-            user_id: api1Response.data.user_id
+            user_id: api1Response.data.user_id,
         });
-        const report= api1Response.data.report;
+
+        // Extract report and tasks data
+        const report = api1Response.data.report;
         const tasks = api2Response.data.tasks;
+        const userid = api1Response.data.user_id;
+
+        // Save the generated report and tasks to the database
+        const newReport = new Report({
+            userid,
+            tasks,
+        });
+
+        // Save the report to the database
+        await newReport.save();
+
         // Respond with success
         res.status(200).json({
+            message: 'Form submitted successfully, report and tasks generated',
             report,
-             tasks,
+            tasks,
         });
     } catch (error) {
         console.error('Error processing the request:', error.message);
         res.status(500).json({ error: error.message });
     }
 };
+exports.getUserReports = async (req, res) => {
+    try {
+        // Fetch userId from the query parameters
+        const userId = req.query.userid;
 
-// Endpoint to download the saved MD file
-exports.downloadReport = (req, res) => {
-    const reportPath = path.join(__dirname, '../reports/mental-health-report.md');
-    res.download(reportPath, 'mental-health-report.md', (err) => {
-        if (err) {
-            console.error('Error sending the report file:', err.message);
-            res.status(500).json({ error: 'Failed to download the report file' });
+        console.log("User ID received:", userId); // Log userId
+
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
         }
-    });
+
+        // Query reports for the user
+        const reports = await Report.find({ userid: userId });
+
+        if (!reports || reports.length === 0) {
+            return res.status(404).json({ message: 'No reports found for this user' });
+        }
+
+        res.status(200).json({ reports });
+    } catch (error) {
+        console.error('Error fetching reports:', error.message);
+        res.status(500).json({ error: error.message });
+    }
 };
