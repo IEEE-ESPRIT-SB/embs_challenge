@@ -3,8 +3,7 @@ const router = express.Router();
 const formController = require('../controllers/formController');
 
 router.post('/submit-form', formController.submitForm);
+router.get('/user-reports', formController.getUserReports); // Fetch user's reports
 
-// Route to download the AI report
-router.get('/download-report', formController.downloadReport);
 
 module.exports = router;
